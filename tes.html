@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>裝備成本計算機 v2 (含模擬功能)</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-main: #e0e0e0;
+            --accent-a: #ff6b6b; /* 紅色系 */
+            --accent-b: #4dabf7; /* 藍色系 */
+            --result-win: #51cf66;
+            --sim-btn: #fcc419;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 { text-align: center; font-weight: 300; margin-bottom: 10px; }
+        p.subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.9em; }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            min-width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-top: 5px solid #555;
+            position: relative;
+        }
+
+        .card.equip-a { border-top-color: var(--accent-a); }
+        .card.equip-b { border-top-color: var(--accent-b); }
+
+        h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; font-size: 1.4em; }
+        .equip-a h2 { color: var(--accent-a); }
+        .equip-b h2 { color: var(--accent-b); }
+
+        .section {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border-left: 3px solid #555;
+        }
+        
+        /* 標示跳過的階段 */
+        .section.skipped {
+            opacity: 0.5;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.2),
+                rgba(0,0,0,0.2) 10px,
+                rgba(0,0,0,0.3) 10px,
+                rgba(0,0,0,0.3) 20px
+            );
+            text-align: center;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+            margin-bottom: 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        input {
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 60px;
+            text-align: right;
+        }
+
+        /* 結果區域 */
+        .result-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: #222;
+            border-radius: 8px;
+        }
+
+        .ev-box {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .ev-label { font-size: 0.8em; color: #888; }
+        .ev-value { font-size: 1.8em; font-weight: bold; display: block; }
+
+        /* 模擬區塊 */
+        .sim-box {
+            text-align: center;
+        }
+        
+        .sim-btn {
+            background-color: var(--sim-btn);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 10px rgba(252, 196, 25, 0.3);
+        }
+        
+        .sim-btn:active { transform: scale(0.98); }
+        .sim-btn:hover { background-color: #ffd43b; }
+
+        .sim-result {
+            margin-top: 10px;
+            font-size: 1.4em;
+            font-weight: bold;
+            min-height: 1.4em;
+            color: #fff;
+        }
+        
+        .sim-detail { font-size: 0.8em; color: #aaa; margin-top: 5px; min-height: 3em;}
+
+        .lucky { color: #51cf66; } /* 運氣好 */
+        .unlucky { color: #ff6b6b; } /* 運氣差 */
+
+    </style>
+</head>
+<body>
+
+    <h1>裝備成本計算機 v2</h1>
+    <p class="subtitle">期望值 (數學平均) vs 真實模擬 (看臉) 此金額不含第一階段扣除成本&第二階段超越失敗扣除成本</p>
+
+    <div class="container">
+        <div class="card equip-a">
+            <h2>方案 A (多一關)</h2>
+            
+            <div class="section">
+                <div class="section-title">Step 1: 紅 -> 藍</div>
+                <div class="input-group"><label>成本</label><input type="number" id="a_s1_cost" value="10" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="a_s1_prob" value="30" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="section" style="border-left-color: #ffda6b;">
+                <div class="section-title">Step 1.5: 額外關卡 <span style="font-size:0.8em; color:#eebb00;">(Plan A 獨有)</span></div>
+                <div class="input-group"><label>基本成本</label><input type="number" id="a_s15_cost" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>5次後加價</label><input type="number" id="a_s15_penalty" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="a_s15_prob" value="40" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Step 2: 超越 (需5勝)</div>
+                <div class="input-group"><label>成本</label><input type="number" id="a_s2_cost" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="a_s2_prob" value="50" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Step 3: 再進階 (含懲罰)</div>
+                <div class="input-group"><label>基本成本</label><input type="number" id="a_s3_base" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>5次後加價</label><input type="number" id="a_s3_penalty" value="50" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="a_s3_prob" value="7" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="result-area">
+                <div class="ev-box">
+                    <span class="ev-label">數學期望值 (平均花費)</span>
+                    <span class="ev-value" id="a_ev">0 億</span>
+                </div>
+                <div class="sim-box">
+                    <div id="a_sim_res" class="sim-result">---</div>
+                    <div id="a_sim_det" class="sim-detail">點擊下方按鈕進行測試</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card equip-b">
+            <h2>方案 B (走捷徑)</h2>
+            
+            <div class="section">
+                <div class="section-title">Step 1: 紅 -> 藍</div>
+                <div class="input-group"><label>成本</label><input type="number" id="b_s1_cost" value="10" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="b_s1_prob" value="8" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="section skipped">
+                <div class="section-title" style="justify-content:center;">Step 1.5: 額外關卡</div>
+                <div style="font-weight:bold; color:#888;">✨ 此方案直接跳過 ✨</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Step 2: 超越 (需5勝)</div>
+                <div class="input-group"><label>成本</label><input type="number" id="b_s2_cost" value="50" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="b_s2_prob" value="50" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Step 3: 再進階 (含懲罰)</div>
+                <div class="input-group"><label>基本成本</label><input type="number" id="b_s3_base" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>5次後加價</label><input type="number" id="b_s3_penalty" value="8" onchange="calculateEV()"></div>
+                <div class="input-group"><label>機率%</label><input type="number" id="b_s3_prob" value="10" onchange="calculateEV()"></div>
+            </div>
+
+            <div class="result-area">
+                <div class="ev-box">
+                    <span class="ev-label">數學期望值 (平均花費)</span>
+                    <span class="ev-value" id="b_ev">0 億</span>
+                </div>
+                <div class="sim-box">
+                    <div id="b_sim_res" class="sim-result">---</div>
+                    <div id="b_sim_det" class="sim-detail">點擊下方按鈕進行測試</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; margin-bottom: 50px;">
+        <button class="sim-btn" onclick="runSimulation()" style="max-width: 400px;">🎲 開始模擬 (各做一件)</button>
+        <p style="color:#666; font-size: 0.8em; margin-top:10px;">這會由電腦隨機擲骰子，模擬一次真實的製作過程。<br>多按幾次你會發現價格浮動非常大。</p>
+    </div>
+
+    <script>
+        // --- 核心邏輯：數學期望值計算 ---
+        function getVal(id) { return Number(document.getElementById(id).value); }
+
+        function calcStageEV_Simple(cost, prob, winsNeeded) {
+            if(prob <= 0) return Infinity;
+            return (winsNeeded / (prob/100)) * cost;
+        }
+
+        function calcStageEV_Penalty(baseCost, penaltyAdd, prob) {
+            let p = prob / 100;
+            if(p <= 0) return Infinity;
+            let q = 1 - p;
+            
+            // 期望次數 E = 1/p
+            // 懲罰觸發係數 = (1-p)^5 / p  (這是幾何分佈大於5次部分的加權和)
+            let avgTries = 1 / p;
+            let penaltyFactor = Math.pow(q, 5) / p;
+
+            return (avgTries * baseCost) + (penaltyFactor * penaltyAdd);
+        }
+
+        function calculateEV() {
+            // A 方案 EV
+            let a_ev = 0;
+            a_ev += calcStageEV_Simple(getVal('a_s1_cost'), getVal('a_s1_prob'), 1);
+            // 階段 1.5 (A獨有, 也有懲罰機制)
+            a_ev += calcStageEV_Penalty(getVal('a_s15_cost'), getVal('a_s15_penalty'), getVal('a_s15_prob'));
+            a_ev += calcStageEV_Simple(getVal('a_s2_cost'), getVal('a_s2_prob'), 5);
+            a_ev += calcStageEV_Penalty(getVal('a_s3_base'), getVal('a_s3_penalty'), getVal('a_s3_prob'));
+
+            // B 方案 EV
+            let b_ev = 0;
+            b_ev += calcStageEV_Simple(getVal('b_s1_cost'), getVal('b_s1_prob'), 1);
+            // B 跳過階段 1.5
+            b_ev += calcStageEV_Simple(getVal('b_s2_cost'), getVal('b_s2_prob'), 5);
+            b_ev += calcStageEV_Penalty(getVal('b_s3_base'), getVal('b_s3_penalty'), getVal('b_s3_prob'));
+
+            // 顯示
+            document.getElementById('a_ev').innerText = Math.round(a_ev).toLocaleString() + " 億";
+            document.getElementById('b_ev').innerText = Math.round(b_ev).toLocaleString() + " 億";
+            
+            return { a_ev, b_ev };
+        }
+
+        // --- 核心邏輯：蒙地卡羅模擬 (真實擲骰子) ---
+        function simulateStage(cost, probPct, winsNeeded, penaltyAfter5, penaltyAdd) {
+            let totalCost = 0;
+            let wins = 0;
+            let attemptsThisStage = 0; // 用於計算單次成功過程中的次數
+
+            // 對於需要多次成功的 (如超越)，其實是連續做 winsNeeded 次 "單次成功"
+            // 但題目沒說超越階段失敗會倒扣成功數，所以我們假設是累積制
+            
+            for(let w=0; w<winsNeeded; w++) {
+                let currentSuccess = false;
+                let triesForThisWin = 0;
+
+                while(!currentSuccess) {
+                    triesForThisWin++;
+                    attemptsThisStage++; // 這裡假設懲罰是針對 "單次成功的嘗試次數" 重置的？
+                    // 通常遊戲機制裡，如果失敗，次數會累積還是重置？
+                    // 根據描述 "只有五次機會 再多一次要額外付"，通常是指 "針對當前這顆星" 的嘗試次數。
+                    // 一旦成功，邁向下一顆星，次數重置。
+                    
+                    let currentTryCost = cost;
+                    if (penaltyAfter5 && triesForThisWin > 5) {
+                        currentTryCost += penaltyAdd;
+                    }
+                    
+                    totalCost += currentTryCost;
+
+                    // 擲骰子 (0~99)
+                    let roll = Math.random() * 100;
+                    if (roll < probPct) {
+                        currentSuccess = true;
+                    }
+                }
+            }
+            return totalCost;
+        }
+
+        function runSimulation() {
+            // A 模擬
+            let a_cost = 0;
+            // Step 1
+            a_cost += simulateStage(getVal('a_s1_cost'), getVal('a_s1_prob'), 1, false, 0);
+            // Step 1.5 (Penalized)
+            a_cost += simulateStage(getVal('a_s15_cost'), getVal('a_s15_prob'), 1, true, getVal('a_s15_penalty'));
+            // Step 2
+            a_cost += simulateStage(getVal('a_s2_cost'), getVal('a_s2_prob'), 5, false, 0);
+            // Step 3 (Penalized)
+            a_cost += simulateStage(getVal('a_s3_base'), getVal('a_s3_prob'), 1, true, getVal('a_s3_penalty'));
+
+            // B 模擬
+            let b_cost = 0;
+            // Step 1
+            b_cost += simulateStage(getVal('b_s1_cost'), getVal('b_s1_prob'), 1, false, 0);
+            // Step 1.5 Skipped
+            // Step 2
+            b_cost += simulateStage(getVal('b_s2_cost'), getVal('b_s2_prob'), 5, false, 0);
+            // Step 3 (Penalized)
+            b_cost += simulateStage(getVal('b_s3_base'), getVal('b_s3_prob'), 1, true, getVal('b_s3_penalty'));
+
+            // 顯示結果與比較
+            let evs = calculateEV(); // 獲取期望值來做比較
+            
+            displaySimResult('a', a_cost, evs.a_ev);
+            displaySimResult('b', b_cost, evs.b_ev);
+        }
+
+        function displaySimResult(prefix, actual, ev) {
+            let elRes = document.getElementById(prefix + '_sim_res');
+            let elDet = document.getElementById(prefix + '_sim_det');
+            
+            elRes.innerText = actual.toLocaleString() + " 億";
+            
+            let diff = actual - ev;
+            let pct = (diff / ev) * 100;
+            
+            let statusText = "";
+            let statusClass = "";
+
+            if (actual < ev) {
+                statusText = `運氣爆發！比平均省了 ${Math.round(Math.abs(diff))} 億`;
+                statusClass = "lucky";
+            } else {
+                statusText = `運氣不好...比平均多花 ${Math.round(diff)} 億`;
+                statusClass = "unlucky";
+            }
+
+            elRes.className = "sim-result " + statusClass;
+            elDet.innerText = statusText;
+        }
+
+        // 初始化
+        calculateEV();
+    </script>
+</body>
+</html>
