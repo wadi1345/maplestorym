@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>裝備運氣模擬器 v6 (詳細帳單)</title>
+    <title>裝備運氣模擬器 v7 (全自定義)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -59,22 +59,26 @@
         /* 設定區塊折疊/展開 */
         .settings-toggle {
             cursor: pointer;
-            color: #666;
-            font-size: 0.8em;
+            color: #aaa;
+            font-size: 0.9em;
             text-align: right;
             margin-bottom: 10px;
             text-decoration: underline;
+            padding: 5px;
         }
+        .settings-toggle:hover { color: #fff; }
         
         .settings-area {
             display: none;
             margin-bottom: 15px;
+            border-top: 1px dashed #333;
+            padding-top: 10px;
         }
         .settings-area.show { display: block; }
 
         .section {
             margin-bottom: 8px;
-            padding: 8px 12px;
+            padding: 10px;
             background: rgba(255,255,255,0.03);
             border-radius: 6px;
             border-left: 2px solid #444;
@@ -82,19 +86,31 @@
         
         .section.penalty-zone { border-left-color: var(--gold); background: rgba(255, 212, 59, 0.05); }
 
+        .section-header {
+            font-size: 0.85em; 
+            color: #888; 
+            margin-bottom: 8px; 
+            font-weight: bold;
+            display: block;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 4px;
+        }
+
         .input-group {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             align-items: center;
             font-size: 0.85em;
         }
 
-        label { color: #aaa; }
+        label { color: #ccc; }
         input {
-            background: #333; border: 1px solid #444; color: white;
-            padding: 2px 6px; border-radius: 4px; width: 60px; text-align: right;
+            background: #2a2a2a; border: 1px solid #444; color: white;
+            padding: 3px 6px; border-radius: 4px; width: 65px; text-align: right;
+            font-family: monospace;
         }
+        input:focus { border-color: #888; outline: none; }
 
         /* 結果展示區 */
         .result-area {
@@ -134,7 +150,7 @@
             border-top: 1px solid #333;
             font-size: 0.9em;
             color: #ccc;
-            display: none; /* 初始隱藏，模擬後顯示 */
+            display: none; 
         }
 
         .breakdown-row {
@@ -148,7 +164,7 @@
         .row-label { color: #888; font-size: 0.9em; }
         .row-val { font-family: monospace; font-weight: bold; }
 
-        /* 運氣等級樣式 */
+        /* 運氣等級 */
         .rank-sss { background: linear-gradient(135deg, #ffd43b, #fcc419); color: #000; box-shadow: 0 0 15px var(--gold); animation: pulse 1.5s infinite; }
         .rank-s { background: var(--green); color: #000; box-shadow: 0 0 10px var(--green); }
         .rank-a { background: #444; color: #ddd; }
@@ -180,12 +196,12 @@
 </head>
 <body>
 
-    <h1>裝備運氣模擬器 v6</h1>
-    <p class="subtitle">含各階段花費明細</p>
+    <h1>裝備運氣模擬器 v7</h1>
+    <p class="subtitle">全數值皆可自定義</p>
 
     <div class="container">
         <div class="card equip-a">
-            <h2>方案 A (低成本風險流)</h2>
+            <h2>方案 A</h2>
             <div class="result-area" id="res_box_a">
                 <span class="ev-title">平均期望值: <span id="a_ev">...</span></span>
                 
@@ -193,38 +209,43 @@
                 <span class="sim-value" id="a_sim_val">---</span>
                 <div class="rank-badge" id="a_rank">準備中</div>
 
-                <div class="breakdown-list" id="a_breakdown">
-                    </div>
+                <div class="breakdown-list" id="a_breakdown"></div>
             </div>
 
-            <div class="settings-toggle" onclick="toggleSettings('set_a')">展開/隱藏 詳細機率設定</div>
+            <div class="settings-toggle" onclick="toggleSettings('set_a')">⚙️ 展開詳細設定 (修改金額/機率)</div>
             <div id="set_a" class="settings-area">
-                <div class="section penalty-zone">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 1: 紅->藍 (前5次10億, 後+2億)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="a_s1_prob" value="30" onchange="calculateEV()"></div>
-                </div>
-                <div class="section penalty-zone">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 1.5: 額外 (前5次8億, 後+8億)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="a_s15_prob" value="40" onchange="calculateEV()"></div>
-                </div>
-                <div class="section">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 2: 超越 (每次8億, 需5勝)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="a_s2_prob" value="50" onchange="calculateEV()"></div>
-                </div>
-                <div class="section penalty-zone">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 3: 進階 (前5次8億, 後+50億)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="a_s3_prob" value="7" onchange="calculateEV()"></div>
-                </div>
                 
-                <input type="hidden" id="a_s1_cost" value="10"><input type="hidden" id="a_s1_pnl" value="12">
-                <input type="hidden" id="a_s15_cost" value="8"><input type="hidden" id="a_s15_pnl" value="16">
-                <input type="hidden" id="a_s2_cost" value="8">
-                <input type="hidden" id="a_s3_base" value="8"><input type="hidden" id="a_s3_pnl" value="58">
+                <div class="section penalty-zone">
+                    <span class="section-header">Step 1: 紅 -> 藍 (懲罰機制)</span>
+                    <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s1_prob" value="30" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>前5次成本</label><input type="number" id="a_s1_cost" value="10" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s1_pnl" value="12" onchange="calculateEV()"></div>
+                </div>
+
+                <div class="section penalty-zone">
+                    <span class="section-header">Step 1.5: 額外關卡 (懲罰機制)</span>
+                    <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s15_prob" value="40" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>前5次成本</label><input type="number" id="a_s15_cost" value="8" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s15_pnl" value="16" onchange="calculateEV()"></div>
+                </div>
+
+                <div class="section">
+                    <span class="section-header">Step 2: 超越 (需5勝)</span>
+                    <div class="input-group"><label>單次機率 (%)</label><input type="number" id="a_s2_prob" value="50" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>單次成本</label><input type="number" id="a_s2_cost" value="8" onchange="calculateEV()"></div>
+                </div>
+
+                <div class="section penalty-zone">
+                    <span class="section-header">Step 3: 再進階 (懲罰機制)</span>
+                    <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s3_prob" value="7" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>前5次成本</label><input type="number" id="a_s3_base" value="8" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s3_pnl" value="58" onchange="calculateEV()"></div>
+                </div>
             </div>
         </div>
 
         <div class="card equip-b">
-            <h2>方案 B (高成本捷徑流)</h2>
+            <h2>方案 B</h2>
             <div class="result-area" id="res_box_b">
                 <span class="ev-title">平均期望值: <span id="b_ev">...</span></span>
                 
@@ -232,43 +253,47 @@
                 <span class="sim-value" id="b_sim_val">---</span>
                 <div class="rank-badge" id="b_rank">準備中</div>
 
-                <div class="breakdown-list" id="b_breakdown">
-                    </div>
+                <div class="breakdown-list" id="b_breakdown"></div>
             </div>
 
-            <div class="settings-toggle" onclick="toggleSettings('set_b')">展開/隱藏 詳細機率設定</div>
+            <div class="settings-toggle" onclick="toggleSettings('set_b')">⚙️ 展開詳細設定 (修改金額/機率)</div>
             <div id="set_b" class="settings-area">
+                
                 <div class="section penalty-zone">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 1: 紅->藍 (前5次10億, 後+2億)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="b_s1_prob" value="8" onchange="calculateEV()"></div>
+                    <span class="section-header">Step 1: 紅 -> 藍 (懲罰機制)</span>
+                    <div class="input-group"><label>成功機率 (%)</label><input type="number" id="b_s1_prob" value="8" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>前5次成本</label><input type="number" id="b_s1_cost" value="10" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本</label><input type="number" id="b_s1_pnl" value="12" onchange="calculateEV()"></div>
                 </div>
+
                 <div class="section" style="opacity:0.5; text-align:center; padding:5px;">Step 1.5: 直接跳過</div>
+
                 <div class="section">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 2: 超越 (每次50億, 需5勝)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="b_s2_prob" value="50" onchange="calculateEV()"></div>
+                    <span class="section-header">Step 2: 超越 (需5勝)</span>
+                    <div class="input-group"><label>單次機率 (%)</label><input type="number" id="b_s2_prob" value="50" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>單次成本</label><input type="number" id="b_s2_cost" value="50" onchange="calculateEV()"></div>
                 </div>
+
                 <div class="section penalty-zone">
-                    <div style="font-size:0.8em; color:#aaa; margin-bottom:5px;">Step 3: 進階 (前5次8億, 後+8億)</div>
-                    <div class="input-group"><label>機率%</label><input type="number" id="b_s3_prob" value="10" onchange="calculateEV()"></div>
+                    <span class="section-header">Step 3: 再進階 (懲罰機制)</span>
+                    <div class="input-group"><label>成功機率 (%)</label><input type="number" id="b_s3_prob" value="10" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>前5次成本</label><input type="number" id="b_s3_base" value="8" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本</label><input type="number" id="b_s3_pnl" value="16" onchange="calculateEV()"></div>
                 </div>
-                 
-                 <input type="hidden" id="b_s1_cost" value="10"><input type="hidden" id="b_s1_pnl" value="12">
-                 <input type="hidden" id="b_s2_cost" value="50">
-                 <input type="hidden" id="b_s3_base" value="8"><input type="hidden" id="b_s3_pnl" value="16">
             </div>
         </div>
     </div>
 
     <div style="text-align: center;">
         <button class="sim-btn" onclick="runSimulation()">🔮 召喚運氣 (開始模擬)</button>
-        <p style="color:#666; font-size: 0.8em; margin-top: 10px;">看看是哪個階段在吸你的血</p>
+        <p style="color:#666; font-size: 0.8em; margin-top: 10px;">點擊「展開詳細設定」即可修改所有成本與機率</p>
     </div>
 
     <script>
         function toggleSettings(id) { document.getElementById(id).classList.toggle('show'); }
         function getVal(id) { return Number(document.getElementById(id).value); }
 
-        // EV 計算 (保持嚴謹邏輯)
+        // EV 計算
         function calcPenaltyEV(base, penalty, prob) {
             let p = prob/100; if(p<=0) return 0;
             let q = 1-p;
@@ -296,7 +321,7 @@
             return {a, b};
         }
 
-        // 模擬單一階段 (回傳該階段花費)
+        // 模擬單一階段
         function simStage(base, penalty, prob, wins, hasPenalty) {
             let cost = 0;
             for(let w=0; w<wins; w++) {
@@ -314,23 +339,21 @@
         }
 
         function runSimulation() {
-            // Plan A 模擬
+            // Plan A
             let a_s1 = simStage(getVal('a_s1_cost'), getVal('a_s1_pnl'), getVal('a_s1_prob'), 1, true);
             let a_s15 = simStage(getVal('a_s15_cost'), getVal('a_s15_pnl'), getVal('a_s15_prob'), 1, true);
             let a_s2 = simStage(getVal('a_s2_cost'), 0, getVal('a_s2_prob'), 5, false);
             let a_s3 = simStage(getVal('a_s3_base'), getVal('a_s3_pnl'), getVal('a_s3_prob'), 1, true);
             let a_total = a_s1 + a_s15 + a_s2 + a_s3;
 
-            // Plan B 模擬
+            // Plan B
             let b_s1 = simStage(getVal('b_s1_cost'), getVal('b_s1_pnl'), getVal('b_s1_prob'), 1, true);
-            // B 跳過 s1.5
             let b_s2 = simStage(getVal('b_s2_cost'), 0, getVal('b_s2_prob'), 5, false);
             let b_s3 = simStage(getVal('b_s3_base'), getVal('b_s3_pnl'), getVal('b_s3_prob'), 1, true);
             let b_total = b_s1 + b_s2 + b_s3;
 
             let evs = calculateEV();
             
-            // 更新 UI 與明細
             updateResult('a', a_total, evs.a, [
                 {name: "Step 1 (紅>藍)", val: a_s1},
                 {name: "Step 1.5 (額外)", val: a_s15},
@@ -353,7 +376,6 @@
             
             elVal.innerText = Math.round(actual).toLocaleString() + " 億";
             
-            // 運氣稱號
             let ratio = actual / ev;
             let rankText, rankClass;
             if (ratio <= 0.5) { rankText = "✨ 天選之人 ✨"; rankClass = "rank-sss"; }
@@ -369,7 +391,6 @@
             else if(rankClass === "rank-f") elBox.style.borderColor = "#c92a2a";
             else elBox.style.borderColor = "#333";
 
-            // 填充明細
             elList.style.display = 'block';
             let html = '';
             details.forEach(item => {
@@ -383,6 +404,7 @@
             elList.innerHTML = html;
         }
 
+        // 初始化
         calculateEV();
     </script>
 </body>
