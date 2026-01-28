@@ -216,17 +216,17 @@
             <div id="set_a" class="settings-area">
                 
                 <div class="section penalty-zone">
-                    <span class="section-header">Step 1: 紅 -> 藍 (懲罰機制)</span>
+                    <span class="section-header">Step 1: 神話 -> 古代 (懲罰機制)</span>
                     <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s1_prob" value="30" onchange="calculateEV()"></div>
                     <div class="input-group"><label>前5次成本</label><input type="number" id="a_s1_cost" value="10" onchange="calculateEV()"></div>
-                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s1_pnl" value="12" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本(含扣除)</label><input type="number" id="a_s1_pnl" value="12" onchange="calculateEV()"></div>
                 </div>
 
                 <div class="section penalty-zone">
                     <span class="section-header">Step 1.5: 額外關卡 (懲罰機制)</span>
                     <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s15_prob" value="40" onchange="calculateEV()"></div>
                     <div class="input-group"><label>前5次成本</label><input type="number" id="a_s15_cost" value="8" onchange="calculateEV()"></div>
-                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s15_pnl" value="16" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本(含扣除)</label><input type="number" id="a_s15_pnl" value="16" onchange="calculateEV()"></div>
                 </div>
 
                 <div class="section">
@@ -239,7 +239,7 @@
                     <span class="section-header">Step 3: 再進階 (懲罰機制)</span>
                     <div class="input-group"><label>成功機率 (%)</label><input type="number" id="a_s3_prob" value="7" onchange="calculateEV()"></div>
                     <div class="input-group"><label>前5次成本</label><input type="number" id="a_s3_base" value="8" onchange="calculateEV()"></div>
-                    <div class="input-group"><label>第6次起成本</label><input type="number" id="a_s3_pnl" value="58" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本(含扣除)</label><input type="number" id="a_s3_pnl" value="58" onchange="calculateEV()"></div>
                 </div>
             </div>
         </div>
@@ -260,10 +260,10 @@
             <div id="set_b" class="settings-area">
                 
                 <div class="section penalty-zone">
-                    <span class="section-header">Step 1: 紅 -> 藍 (懲罰機制)</span>
+                    <span class="section-header">Step 1: 神話 -> 死靈 (懲罰機制)</span>
                     <div class="input-group"><label>成功機率 (%)</label><input type="number" id="b_s1_prob" value="8" onchange="calculateEV()"></div>
                     <div class="input-group"><label>前5次成本</label><input type="number" id="b_s1_cost" value="10" onchange="calculateEV()"></div>
-                    <div class="input-group"><label>第6次起成本</label><input type="number" id="b_s1_pnl" value="12" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本(含扣除)</label><input type="number" id="b_s1_pnl" value="12" onchange="calculateEV()"></div>
                 </div>
 
                 <div class="section" style="opacity:0.5; text-align:center; padding:5px;">Step 1.5: 直接跳過</div>
@@ -278,7 +278,7 @@
                     <span class="section-header">Step 3: 再進階 (懲罰機制)</span>
                     <div class="input-group"><label>成功機率 (%)</label><input type="number" id="b_s3_prob" value="10" onchange="calculateEV()"></div>
                     <div class="input-group"><label>前5次成本</label><input type="number" id="b_s3_base" value="8" onchange="calculateEV()"></div>
-                    <div class="input-group"><label>第6次起成本</label><input type="number" id="b_s3_pnl" value="16" onchange="calculateEV()"></div>
+                    <div class="input-group"><label>第6次起成本(含扣除)</label><input type="number" id="b_s3_pnl" value="16" onchange="calculateEV()"></div>
                 </div>
             </div>
         </div>
@@ -409,4 +409,5 @@
     </script>
 </body>
 </html>
+
 
